@@ -1,5 +1,5 @@
-hash: dbaf34c6a11259517cf882afa8a5ecf03eade91f1cac4c4e54edc30a3b4fdd3e
-updated: 2019-04-08T10:22:39.596389-07:00
+hash: ae0e3ee38b58dfa32d7c9454274d8880084f1143eb4384b57fe37841c9ff5e6d
+updated: 2019-11-25T13:32:49.946589928-08:00
 imports:
 - name: github.com/envoyproxy/go-control-plane
   version: 0ad6fa1cf0b9b6ca8f3617a7188a568e81f40b87
@@ -13,7 +13,7 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/gogo/protobuf
-  version: ba06b47c162d49f2af050fb4c75bcbc86a159d5c
+  version: 5628607bb4c51c3157aacc3a50f0ab707582b805
   subpackages:
   - gogoproto
   - proto
@@ -22,7 +22,7 @@ imports:
   - sortkeys
   - types
 - name: github.com/golang/mock
-  version: 8a44ef6e8be577e050008c7886f24fc705d709fb
+  version: 2b692abeee300713217dcb542d4c2627ba1a4592
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
@@ -57,7 +57,7 @@ imports:
   subpackages:
   - validate
 - name: github.com/mediocregopher/radix.v2
-  version: 94360be262532d465b7e4760c7a67195d3319a87
+  version: b67df6e626f993b64b3ca9f4b8630900e61002e3
   subpackages:
   - pool
   - redis
@@ -72,11 +72,12 @@ imports:
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
-  version: d0887baf81f4598189d4e12a37c6da86f0bba4d0
+  version: da9a3fd4c5820e74b24a6cb7fb438dc9b0dd377c
   subpackages:
   - context
   - http/httpguts
   - http2
+  - http2/h2c
   - http2/hpack
   - idna
   - internal/timeseries
@@ -126,7 +127,7 @@ imports:
   - tap
   - transport
 - name: gopkg.in/yaml.v2
-  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
+  version: f221b8435cfb71e54062f6c6e99e9ade30b124d5
 testImports:
 - name: github.com/davecgh/go-spew
   version: 2df174808ee097f90d259e432cc04442cf60be21

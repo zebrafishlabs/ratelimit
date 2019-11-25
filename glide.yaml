@@ -25,6 +25,10 @@ import:
   version: master
 - package: github.com/stretchr/testify
   version: v1.1.3
+- package: golang.org/x/net/http2
+  version: master
+- package: golang.org/x/net/http2/h2c
+  version: master
 - package: google.golang.org/grpc
   version: v1.12.0
 - package: github.com/kavu/go_reuseport

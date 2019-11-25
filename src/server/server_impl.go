@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"sort"
+	"strings"
 
 	"os"
 	"os/signal"
@@ -20,6 +21,8 @@ import (
 	stats "github.com/lyft/gostats"
 	"github.com/lyft/ratelimit/src/settings"
 	logger "github.com/sirupsen/logrus"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -36,12 +39,14 @@ type server struct {
 	grpcPort      int
 	debugPort     int
 	router        *mux.Router
+	grpcMux       http.Handler
 	grpcServer    *grpc.Server
 	store         stats.Store
 	scope         stats.Scope
 	runtime       loader.IFace
 	debugListener serverDebugListener
 	health        *HealthChecker
+	useTLS        bool
 }
 
 func (server *server) AddDebugHttpEndpoint(path string, help string, handler http.HandlerFunc) {
@@ -72,13 +77,23 @@ func (server *server) Start() {
 
 	server.handleGracefulShutdown()
 
+	proto := "HTTP"
+	if server.useTLS == true {
+		proto = "HTTPS"
+	}
+
 	addr := fmt.Sprintf(":%d", server.port)
-	logger.Warnf("Listening for HTTP on '%s'", addr)
+	logger.Warnf("Listening for %s on '%s'", proto, addr)
 	list, err := reuseport.Listen("tcp", addr)
 	if err != nil {
-		logger.Fatalf("Failed to open HTTP listener: '%+v'", err)
+		logger.Fatalf("Failed to open %s listener: '%+v'", proto, err)
 	}
-	logger.Fatal(http.Serve(list, server.router))
+
+	if server.useTLS == true {
+		logger.Fatal(http.ServeTLS(list, server.grpcMux, "server_crt.pem", "server_key.pem"))
+	} else {
+		logger.Fatal(http.Serve(list, server.grpcMux))
+	}
 }
 
 func (server *server) startGrpc() {
@@ -99,6 +114,40 @@ func (server *server) Runtime() loader.IFace {
 	return server.runtime
 }
 
+type grpcMuxHandler struct {
+	grpcServer    *grpc.Server
+	health        *healthChecker
+}
+
+func (h grpcMuxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logger.Infof("ServeHTTP Path: %s", r.URL.Path)
+	if r.URL.Path == "/" {
+//		logger.Infof("/ (ingress healthcheck) received")
+    	w.Write([]byte("OK\n"))
+//		w.WriteHeader(200)
+		return
+	}
+
+	if r.URL.Path == "/healthcheck" {
+//		logger.Infof("/healthcheck received")
+		h.health.ServeHTTP(w, r)
+		return
+	}
+
+	if isGrpcRequest(r) {
+		logger.Infof("ServeHTTP Path: %s is grpc request.", r.URL.Path)
+		h.grpcServer.ServeHTTP(w,r)
+		return
+	}
+
+	logger.Infof("ServeHTTP Path: %s is unhandled!", r.URL.Path)
+	w.WriteHeader(404)
+}
+
+func isGrpcRequest(r *http.Request) bool {
+	return r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc")
+}
+
 func NewServer(name string, opts ...settings.Option) Server {
 	return newServer(name, opts...)
 }
@@ -117,6 +166,7 @@ func newServer(name string, opts ...settings.Option) *server {
 	ret.port = s.Port
 	ret.grpcPort = s.GrpcPort
 	ret.debugPort = s.DebugPort
+	ret.useTLS = s.UseTLS
 
 	// setup stats
 	ret.store = stats.NewDefaultStore()
@@ -143,8 +193,16 @@ func newServer(name string, opts ...settings.Option) *server {
 
 	// setup healthcheck path
 	ret.health = NewHealthChecker(health.NewServer(), "ratelimit")
-	ret.router.Path("/healthcheck").Handler(ret.health)
+//	ret.router.Path("/healthcheck").Handler(ret.health)
 	healthpb.RegisterHealthServer(ret.grpcServer, ret.health.Server())
+
+	// setup grpc mux path ... this route must come last so that
+	// it is only the default when nothing else matches!
+//	ret.grpc_mux = NewGrpcMux()
+	health_home := grpcMuxHandler{grpcServer: ret.grpcServer, health: ret.health}
+//	ret.router.PathPrefix("/").Handler(health_home)
+
+	ret.grpcMux = h2c.NewHandler(health_home, &http2.Server{})
 
 	// setup default debug listener
 	ret.debugListener.debugMux = http.NewServeMux()
