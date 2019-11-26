@@ -46,7 +46,7 @@ type server struct {
 	runtime       loader.IFace
 	debugListener serverDebugListener
 	health        *HealthChecker
-	useTLS        bool
+	portTls       bool
 }
 
 func (server *server) AddDebugHttpEndpoint(path string, help string, handler http.HandlerFunc) {
@@ -78,7 +78,7 @@ func (server *server) Start() {
 	server.handleGracefulShutdown()
 
 	proto := "HTTP"
-	if server.useTLS == true {
+	if server.portTls == true {
 		proto = "HTTPS"
 	}
 
@@ -89,7 +89,7 @@ func (server *server) Start() {
 		logger.Fatalf("Failed to open %s listener: '%+v'", proto, err)
 	}
 
-	if server.useTLS == true {
+	if server.portTls == true {
 		logger.Fatal(http.ServeTLS(list, server.grpcMux, "server_crt.pem", "server_key.pem"))
 	} else {
 		logger.Fatal(http.Serve(list, server.grpcMux))
@@ -166,7 +166,7 @@ func newServer(name string, opts ...settings.Option) *server {
 	ret.port = s.Port
 	ret.grpcPort = s.GrpcPort
 	ret.debugPort = s.DebugPort
-	ret.useTLS = s.UseTLS
+	ret.portTls = s.portTls
 
 	// setup stats
 	ret.store = stats.NewDefaultStore()
