@@ -32,13 +32,11 @@
 
 This fork enables the ratelimit service to play nicely with Google Cloud's limitations on load balancing with HTTP/2.
 * The health check port becomes a "mux" port. It now serves both gRPC requests and the healthcheck, plus it also returns 200 on /.
-  Why is this necessary?  The Ingress load balancer is the only Google Cloud load balancer capable of load balancing HTTP/2 requests
-  on a per request basis (aka "properly), but it absolutely requires the backend service it is pointing at to serve 200 on / as its health check.
-  It is not possible to point at a different port or a different health check path.
-* Setting the USE_TLS environment variable to "true" will cause the mux port to be served with TLS using the crt/key pair in /res. 
-  This is again required for Ingress to use the gRPC backend properly.
+* * Why is this necessary?  The Ingress load balancer is the only Google Cloud load balancer capable of load balancing HTTP/2 requests
+  on a per request basis (aka "properly"), but it absolutely requires the backend service it is pointing at to serve 200 on / as its health check. It is not possible to point the Ingress health check at a different port or a different health check path.
+* Setting the PORT_TLS environment variable to "true" will cause the mux port to be served with TLS using the crt/key pair in /res. This is again required for Ingress to use the gRPC backend properly.
 * The provided crt/key pair for TLS is not in any way private or special to us. You can use it or simply provide your own.
-* TODO's: use the actual healthcheck on / instead of just 200, remove dead code paths relating to the old simple health check, rename TLS env var slightly.
+* TODO's: use the actual healthcheck code on / instead of just blindly returning 200, remove dead code paths relating to the old simple health check.
 
 # Overview
 
