@@ -120,7 +120,7 @@ type grpcMuxHandler struct {
 }
 
 func (h grpcMuxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	logger.Infof("ServeHTTP Path: %s", r.URL.Path)
+	logger.Debugf("ServeHTTP Path: %s", r.URL.Path)
 	if r.URL.Path == "/" {
 //		logger.Infof("/ (ingress healthcheck) received")
     	w.Write([]byte("OK\n"))
@@ -135,12 +135,12 @@ func (h grpcMuxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isGrpcRequest(r) {
-		logger.Infof("ServeHTTP Path: %s is grpc request.", r.URL.Path)
+//		logger.Infof("ServeHTTP Path: %s is grpc request.", r.URL.Path)
 		h.grpcServer.ServeHTTP(w,r)
 		return
 	}
 
-	logger.Infof("ServeHTTP Path: %s is unhandled!", r.URL.Path)
+//	logger.Infof("ServeHTTP Path: %s is unhandled!", r.URL.Path)
 	w.WriteHeader(404)
 }
 
