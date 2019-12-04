@@ -116,7 +116,7 @@ func (server *server) Runtime() loader.IFace {
 
 type grpcMuxHandler struct {
 	grpcServer    *grpc.Server
-	health        *healthChecker
+	health        *HealthChecker
 }
 
 func (h grpcMuxHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +166,7 @@ func newServer(name string, opts ...settings.Option) *server {
 	ret.port = s.Port
 	ret.grpcPort = s.GrpcPort
 	ret.debugPort = s.DebugPort
-	ret.portTls = s.portTls
+	ret.portTls = s.PortTls
 
 	// setup stats
 	ret.store = stats.NewDefaultStore()
